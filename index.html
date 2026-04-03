@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinister Omnipresence — Build Log</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg2: #141414;
+      --bg3: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #c0392b;
+      --accent2: #e74c3c;
+      --text: #e8e8e8;
+      --muted: #888;
+      --green: #2ecc71;
+      --yellow: #f39c12;
+      --red: #e74c3c;
+      --blue: #3498db;
+      --code: #1e1e2e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+    h2 { font-size: 1.3rem; font-weight: 700; color: var(--accent2); margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; font-weight: 700; margin: 20px 0 8px; }
+    h4 { font-size: 0.95rem; font-weight: 700; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    p { margin-bottom: 12px; }
+    ul, ol { padding-left: 24px; margin-bottom: 12px; }
+    li { margin-bottom: 4px; }
+    code {
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.85em;
+      color: #a6e3a1;
+    }
+    pre {
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    pre code { background: none; border: none; padding: 0; font-size: 0.88em; color: #cdd6f4; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { text-align: left; padding: 10px 14px; background: var(--bg3); color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg2); }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-green { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+    .badge-yellow { background: rgba(243,156,18,0.15); color: var(--yellow); border: 1px solid rgba(243,156,18,0.3); }
+    .badge-red { background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
+    .badge-blue { background: rgba(52,152,219,0.15); color: var(--blue); border: 1px solid rgba(52,152,219,0.3); }
+    .header-bar {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .header-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--accent);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .tagline { color: var(--muted); font-size: 1rem; margin-top: 4px; }
+    .meta { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+    .meta span { margin-right: 16px; }
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .card-title { font-weight: 700; margin-bottom: 6px; }
+    .build-entry {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+    .build-entry .version {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+    .build-entry .build-date { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; }
+    .platform-tag {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(192,57,43,0.2);
+      color: var(--accent2);
+      border: 1px solid rgba(192,57,43,0.3);
+      margin-right: 4px;
+    }
+    .arch-box {
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      font-family: "SF Mono", monospace;
+      font-size: 0.84em;
+      line-height: 1.9;
+      color: #cdd6f4;
+    }
+    .invite-banner {
+      background: rgba(192,57,43,0.1);
+      border: 1px solid rgba(192,57,43,0.3);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    .auto-badge {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+    .file-tree { font-family: "SF Mono", monospace; font-size: 0.85em; line-height: 2; }
+    .file-tree .dir { color: var(--blue); }
+    .file-tree .file { color: #cdd6f4; }
+    .file-tree .comment { color: var(--muted); }
+    footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.82rem; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="header-bar">
+  <div class="header-icon">&#9763;</div>
+  <div>
+    <h1>Sinister Omnipresence</h1>
+    <div class="tagline">macOS social media scheduler for Sinister Printworks</div>
+    <div class="meta">
+      <span>Platform: macOS 15.0+</span>
+      <span>Language: Swift / SwiftUI</span>
+      <span>Build: XcodeGen + SwiftPM</span>
+      <span>Repo: <a href="https://github.com/gcodemodeactivate-web/sinister-omnipresence">Private (invitation only)</a></span>
+    </div>
+  </div>
+</div>
+
+<div class="invite-banner">
+  <strong>Invitation Only</strong> — The source repository is private. Access is granted by invitation only. Contact
+  <a href="mailto:gcodemodeactivate@gmail.com">gcodemodeactivate@gmail.com</a> to request access.
+</div>
+
+<h2>What It Does</h2>
+<p>
+  Sinister Omnipresence is a native macOS app that lets <strong>Sinister Printworks</strong> publish 3D printing
+  content to every major social media platform simultaneously from a single interface. One post, one click,
+  six platforms.
+</p>
+<p>The app handles everything end-to-end:</p>
+<ul>
+  <li><strong>Compose</strong> once — write a caption, attach photos or videos, add hashtags</li>
+  <li><strong>Per-platform overrides</strong> — different caption per platform without re-typing</li>
+  <li><strong>Auto-transcoding</strong> — each platform gets the correct aspect ratio, codec, and bitrate automatically</li>
+  <li><strong>Schedule</strong> — set a future date/time or publish immediately</li>
+  <li><strong>Compatibility checking</strong> — live warnings if your media won't work on a given platform before you publish</li>
+  <li><strong>Rate limiting</strong> — built-in throttles that match each platform's daily/per-minute API caps</li>
+  <li><strong>Retry logic</strong> — automatic retries with exponential backoff on 429/5xx errors; smart failure classification for permanent errors</li>
+  <li><strong>Token management</strong> — OAuth tokens auto-refresh before expiry; health-check on startup</li>
+</ul>
+
+<h2>Platform Support</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Platform</th>
+      <th>Auth</th>
+      <th>Publish</th>
+      <th>Daily Cap</th>
+      <th>Caption Limit</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Instagram</strong></td>
+      <td><span class="badge badge-green">Working</span></td>
+      <td><span class="badge badge-green">Working</span></td>
+      <td>100</td>
+      <td>2,200 chars</td>
+      <td>Photos, Reels, first comment. Uses User token (not Page token).</td>
+    </tr>
+    <tr>
+      <td><strong>Facebook</strong></td>
+      <td><span class="badge badge-green">Working</span></td>
+      <td><span class="badge badge-green">Working</span></td>
+      <td>25</td>
+      <td>63,206 chars</td>
+      <td>Text, photos, Reels to Sinister Printworks Page.</td>
+    </tr>
+    <tr>
+      <td><strong>YouTube</strong></td>
+      <td><span class="badge badge-yellow">OAuth Ready</span></td>
+      <td><span class="badge badge-yellow">In Progress</span></td>
+      <td>6</td>
+      <td>5,000 chars</td>
+      <td>Resumable upload actor built. Publish wiring pending.</td>
+    </tr>
+    <tr>
+      <td><strong>TikTok</strong></td>
+      <td><span class="badge badge-yellow">OAuth Ready</span></td>
+      <td><span class="badge badge-yellow">In Progress</span></td>
+      <td>15 (6/min)</td>
+      <td>2,200 chars</td>
+      <td>Video-only platform. FILE_UPLOAD actor built. Publish wiring pending.</td>
+    </tr>
+    <tr>
+      <td><strong>Pinterest</strong></td>
+      <td><span class="badge badge-yellow">OAuth Ready</span></td>
+      <td><span class="badge badge-yellow">In Progress</span></td>
+      <td>150</td>
+      <td>500 chars</td>
+      <td>Pin creation actor built. Publish wiring pending.</td>
+    </tr>
+    <tr>
+      <td><strong>X / Twitter</strong></td>
+      <td><span class="badge badge-red">Sandbox</span></td>
+      <td><span class="badge badge-red">Paused</span></td>
+      <td>100</td>
+      <td>280 chars</td>
+      <td>Requires $100/mo X Basic API plan. Chunked media upload built.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Architecture</h2>
+<p>Native SwiftUI macOS app. No server backend. All OAuth flows run on-device via <code>ASWebAuthenticationSession</code> with PKCE. All API clients are Swift actors for thread safety. Persistence is file-based JSON (no CoreData/SwiftData).</p>
+
+<div class="arch-box">
+ComposerView (user input)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+ScheduledPost → DataStore (~/Library/Application Support/SinisterOmnipresence/posts.json)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+PostSchedulerService.processAndPublish() &nbsp;&nbsp;← 30s heartbeat loop<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+MediaProcessorService → TranscodeEngine &nbsp;&nbsp;← AVFoundation, H.264/HEVC, smart center-crop<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+PlatformRateLimiter.waitForCapacity() &nbsp;&nbsp;&nbsp;&nbsp;← never drops posts, suspends until slot opens<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+withTaskGroup → all platforms fire in parallel<br>
+&nbsp;&nbsp;&nbsp;↙&nbsp;&nbsp;↙&nbsp;&nbsp;↙&nbsp;&nbsp;↘&nbsp;&nbsp;↘&nbsp;&nbsp;↘<br>
+MetaGraphAPI &nbsp;XTwitterAPI &nbsp;TikTokAPI &nbsp;YouTubeAPI &nbsp;PinterestAPI<br>
+&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+PostResult[] → DataStore.savePosts() + NotificationService
+</div>
+
+<h2>Media Pipeline (Instagram / Facebook)</h2>
+<p>Instagram requires publicly accessible HTTPS URLs — local file paths don't work. The app uses a Cloudflare R2 staging bucket:</p>
+<div class="arch-box">
+Local media file<br>
+&nbsp;&nbsp;→ POST https://sinisterprintworks.net/api/media/social (header: X-Social-Upload-Key)<br>
+&nbsp;&nbsp;→ Cloudflare R2 bucket (public CDN URL generated)<br>
+&nbsp;&nbsp;→ Meta Graph API uses public URL to create container / upload photo<br>
+&nbsp;&nbsp;→ After successful publish, R2 object is deleted (cleanup)
+</div>
+<p>Instagram images are auto-resized to fit within the 4:5 to 1.91:1 aspect ratio window before upload. Facebook always receives the original unmodified image.</p>
+
+<h2>Key Source Files</h2>
+<div class="file-tree">
+<span class="dir">Sources/</span><br>
+&nbsp;&nbsp;<span class="dir">App/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">SinisterOmnipresenceApp.swift</span>&nbsp;&nbsp;<span class="comment">— @main, AppState, URL scheme handler, dark mode enforce</span><br>
+&nbsp;&nbsp;<span class="dir">Core/Network/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">MetaGraphAPI.swift</span>&nbsp;&nbsp;<span class="comment">— Instagram + Facebook, actor, Graph API v24.0</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">OAuthManager.swift</span>&nbsp;&nbsp;<span class="comment">— OAuth 2.0 + PKCE flows for all 6 platforms</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">APIClient.swift</span>&nbsp;&nbsp;<span class="comment">— Generic HTTP actor, retry, backoff, error types</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">PlatformPublisher.swift</span>&nbsp;&nbsp;<span class="comment">— Legacy publish router (deprecation pending)</span><br>
+&nbsp;&nbsp;<span class="dir">Core/Services/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">PostSchedulerService.swift</span>&nbsp;&nbsp;<span class="comment">— Heartbeat, publishNow(), retry, IG resize logic</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">MediaProcessorService.swift</span>&nbsp;&nbsp;<span class="comment">— Per-platform transcoding orchestration</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">PlatformRateLimiter.swift</span>&nbsp;&nbsp;<span class="comment">— Rolling-window rate enforcement, never drops posts</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">PlatformCapabilityEngine.swift</span>&nbsp;&nbsp;<span class="comment">— Payload validation, compatibility checking</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">DataStore.swift</span>&nbsp;&nbsp;<span class="comment">— JSON file persistence, posts.json + accounts.json</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">MediaHostingService.swift</span>&nbsp;&nbsp;<span class="comment">— Imgur upload for public HTTPS URLs</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">KeychainService.swift</span>&nbsp;&nbsp;<span class="comment">— Single JSON vault (net.sinisterprintworks.omnipresence)</span><br>
+&nbsp;&nbsp;<span class="dir">Core/Transcoding/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">TranscodeEngine.swift</span>&nbsp;&nbsp;<span class="comment">— AVFoundation, H.264/HEVC, smart center-crop for macro photos</span><br>
+&nbsp;&nbsp;<span class="dir">Features/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">Composer/ComposerView.swift</span>&nbsp;&nbsp;<span class="comment">— HSplitView editor + live preview, platform overrides</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">Scheduler/SchedulerView.swift</span>&nbsp;&nbsp;<span class="comment">— Post queue, rate limit gauges, retry controls</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">Accounts/AccountsView.swift</span>&nbsp;&nbsp;<span class="comment">— Connect / disconnect platforms</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">Settings/CredentialsView.swift</span>&nbsp;&nbsp;<span class="comment">— Developer key entry per platform</span><br>
+</div>
+
+<h2>Build Instructions</h2>
+<p>Requires an invitation to access the private repository.</p>
+<pre><code>cd ~/Desktop/SinisterPrintworks/MAC\ OS\ APP/SinisterOmnipresence
+
+# Regenerate Xcode project (run after adding/removing source files)
+/opt/homebrew/bin/xcodegen generate
+
+# Build
+xcodebuild -scheme SinisterOmnipresence -configuration Debug build
+
+# Clean build
+xcodebuild -scheme SinisterOmnipresence -configuration Debug clean build</code></pre>
+<p><strong>Dependencies:</strong> Xcode 15+, XcodeGen (<code>brew install xcodegen</code>), KeychainAccess 4.2.2+ (resolved via SwiftPM automatically)</p>
+
+<h2>Build Log</h2>
+<p class="auto-badge">Auto-generated on every push to main.</p>
+
+<div class="build-entry">
+  <div class="version">v0.2 — Instagram + Facebook Publishing</div>
+  <div class="build-date">April 3, 2026 &nbsp;|&nbsp; Commit: fe0e587</div>
+  <span class="platform-tag">Instagram</span>
+  <span class="platform-tag">Facebook</span>
+  <span class="platform-tag">Meta Graph API</span>
+  <span class="platform-tag">Cloudflare R2</span>
+  <ul style="margin-top:12px">
+    <li>Fixed critical Instagram OAuthException (#10 — "Application does not have permission") — root cause was using Page access token instead of User access token for all Instagram API calls</li>
+    <li>Added <code>instagram_basic</code> permission to Facebook Login for Business Config ID <code>902048656146173</code>; FLFB now has 6 permissions: <code>instagram_basic</code>, <code>instagram_content_publish</code>, <code>instagram_manage_comments</code>, <code>pages_manage_posts</code>, <code>pages_read_engagement</code>, <code>pages_show_list</code></li>
+    <li>Implemented <code>resizeImageForInstagram(fileURL:)</code> — detects if image is outside 4:5&ndash;1.91:1 aspect ratio range; fits onto black canvas (1080&times;1350 for tall, 1080&times;565 for wide); Facebook still receives original image untouched</li>
+    <li>Added <code>page_backed_instagram_accounts</code> fallback when <code>instagram_business_account</code> returns empty</li>
+    <li>Added <code>checkInstagramAccountType()</code> diagnostic method in <code>MetaGraphAPI.swift</code></li>
+    <li>Confirmed Facebook Page publishing and Instagram Business Account publishing both fully operational</li>
+    <li>Confirmed App ID: <code>1580605089715545</code> (corrected from phantom ID in prior session)</li>
+    <li>Initialized git repository and pushed all 57 source files to GitHub</li>
+    <li>Created <code>CLAUDE.md</code> for persistent AI session context</li>
+  </ul>
+</div>
+
+<div class="build-entry">
+  <div class="version">v0.1 — Foundation, OAuth, and Platform Scaffolding</div>
+  <div class="build-date">March 31, 2026 &nbsp;|&nbsp; Initial build</div>
+  <span class="platform-tag">Architecture</span>
+  <span class="platform-tag">OAuth</span>
+  <span class="platform-tag">SwiftUI</span>
+  <ul style="margin-top:12px">
+    <li>Native SwiftUI macOS app scaffold with XcodeGen build system</li>
+    <li>Complete data model: <code>ScheduledPost</code>, <code>MediaAsset</code>, <code>PostResult</code>, <code>SocialAccount</code></li>
+    <li>OAuth 2.0 + PKCE flows implemented for all 6 platforms via <code>ASWebAuthenticationSession</code></li>
+    <li>Typed Swift actor API clients for all platforms: <code>MetaGraphAPI</code>, <code>XTwitterAPI</code>, <code>TikTokAPI</code>, <code>YouTubeAPI</code>, <code>PinterestAPI</code></li>
+    <li>Generic HTTP client actor with retry (3 attempts), exponential backoff, rate limit parsing</li>
+    <li>Background scheduler (<code>PostSchedulerService</code>) with 30s heartbeat, concurrent platform publishing via <code>withTaskGroup</code>, retry logic, partial success tracking</li>
+    <li>Rolling-window rate limiter (<code>PlatformRateLimiter</code>) — posts suspended until capacity available, never dropped</li>
+    <li>Payload validation engine (<code>PlatformCapabilityEngine</code>) — live compatibility checking per platform</li>
+    <li>Per-platform media transcoding (<code>MediaProcessorService</code> + <code>TranscodeEngine</code>) using AVFoundation, H.264/HEVC, hardware-accelerated on Apple Silicon; smart center-crop for macro photography</li>
+    <li>Cloudflare R2 media staging pipeline for Instagram/Pinterest public URL requirement</li>
+    <li>Imgur integration as fallback hosting for Instagram/Pinterest photo posts</li>
+    <li>macOS notifications for publish success/failure/token expiry</li>
+    <li>ComposerView with HSplitView editor + live preview, per-platform caption overrides</li>
+    <li>OnboardingView, SchedulerView, AccountsView, AnalyticsView (placeholder), SettingsView, CredentialsView</li>
+    <li>Meta Graph API upgraded to v24.0; X/Twitter HTTP 402 (credit exhausted) error type added</li>
+    <li><code>partiallyPublished</code> post status for partial platform success</li>
+    <li>File-based JSON persistence at <code>~/Library/Application Support/SinisterOmnipresence/</code></li>
+    <li>Single Keychain vault (<code>net.sinisterprintworks.omnipresence / sinister_vault_v2</code>)</li>
+    <li>Dark mode enforced app-wide; <code>SinisterTheme</code> color/typography system</li>
+  </ul>
+</div>
+
+<h2>Known Issues &amp; Tech Debt</h2>
+<div class="card">
+  <div class="card-title"><span class="badge badge-yellow">Medium</span> PlatformPublisher.swift is legacy</div>
+  <p>Raw <code>URLSession.shared</code> + <code>JSONSerialization</code>. <code>PostSchedulerService</code> now uses typed actor API clients directly. <code>PlatformPublisher</code> should be deprecated and removed.</p>
+</div>
+<div class="card">
+  <div class="card-title"><span class="badge badge-yellow">Medium</span> Fake post IDs mask failures</div>
+  <p><code>PlatformPublisher</code> returns <code>fb_&lt;UUID&gt;</code> placeholders when API calls fail instead of throwing. This hides errors.</p>
+</div>
+<div class="card">
+  <div class="card-title"><span class="badge badge-yellow">Low</span> EngagementService / SocialDispatcher on API v21.0</div>
+  <p>Data endpoints are v24.0 but these two services still reference v21.0 Graph API URLs. Not currently blocking.</p>
+</div>
+<div class="card">
+  <div class="card-title"><span class="badge badge-yellow">Low</span> Token expiry "not found" warning</div>
+  <p>Logs show "Token exists but no expiry found" for Facebook. Fix: disconnect and reconnect Facebook account in app to store fresh expiry timestamp.</p>
+</div>
+<div class="card">
+  <div class="card-title"><span class="badge badge-blue">Planned</span> Connection verification (Roadmap Step 3)</div>
+  <p>No lightweight token health check against live APIs. App reports token state from stored data only, not from a live API ping.</p>
+</div>
+<div class="card">
+  <div class="card-title"><span class="badge badge-blue">Planned</span> Analytics view is a placeholder</div>
+  <p>AnalyticsView exists in the UI but has no live engagement data fetching implemented.</p>
+</div>
+
+<h2>Roadmap</h2>
+<table>
+  <thead><tr><th>Phase</th><th>Description</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Real OAuth routing for all 6 platforms</td><td><span class="badge badge-green">Complete</span></td></tr>
+    <tr><td>2</td><td>Remove sandbox/fake tokens</td><td><span class="badge badge-green">Complete</span></td></tr>
+    <tr><td>3</td><td>Live token health verification</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+    <tr><td>4</td><td>Smart capability detection + compatibility engine</td><td><span class="badge badge-green">Complete</span></td></tr>
+    <tr><td>5</td><td>Auto-formatting + per-platform transcoding</td><td><span class="badge badge-green">Complete</span></td></tr>
+    <tr><td>6</td><td>Instagram + Facebook end-to-end publish</td><td><span class="badge badge-green">Complete</span></td></tr>
+    <tr><td>7</td><td>YouTube, TikTok, Pinterest real publishing</td><td><span class="badge badge-yellow">In Progress</span></td></tr>
+    <tr><td>8</td><td>Analytics + engagement tracking</td><td><span class="badge badge-blue">Planned</span></td></tr>
+  </tbody>
+</table>
+
+<h2>Meta App Configuration</h2>
+<table>
+  <thead><tr><th>Field</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>App Name</td><td>Sinister Omnipresence</td></tr>
+    <tr><td>Meta App ID</td><td><code>1580605089715545</code></td></tr>
+    <tr><td>Facebook Login for Business Config ID</td><td><code>902048656146173</code></td></tr>
+    <tr><td>Facebook Page ID</td><td><code>1080452708479077</code> (Sinister Printworks)</td></tr>
+    <tr><td>Instagram Business Account ID</td><td><code>17841438403617423</code></td></tr>
+    <tr><td>Auth Redirect URI</td><td><code>https://sinisterprintworks.net/api/oauth/meta/callback</code></td></tr>
+    <tr><td>Custom URL Scheme</td><td><code>sinisteromnipresence://oauth/callback</code></td></tr>
+    <tr><td>Graph API Version</td><td>v24.0</td></tr>
+  </tbody>
+</table>
+
+<h2>Author</h2>
+<p>Developed by <strong>Ean Butler</strong> for <a href="https://sinisterprintworks.net">Sinister Printworks</a>.<br>
+Contact: <a href="mailto:gcodemodeactivate@gmail.com">gcodemodeactivate@gmail.com</a></p>
+
+<footer>
+  Sinister Omnipresence &mdash; Private. All rights reserved. &mdash;
+  Build log auto-updated on every push to <code>main</code>.
+</footer>
+
+</body>
+</html>
