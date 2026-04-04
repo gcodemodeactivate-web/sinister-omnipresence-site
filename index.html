@@ -231,26 +231,26 @@
     <tr>
       <td><strong>YouTube</strong></td>
       <td><span class="badge badge-yellow">OAuth Ready</span></td>
-      <td><span class="badge badge-yellow">In Progress</span></td>
+      <td><span class="badge badge-yellow">Code Wired</span></td>
       <td>6</td>
       <td>5,000 chars</td>
-      <td>Resumable upload actor built. Publish wiring pending.</td>
+      <td>Video-only. Resumable upload wired through PostSchedulerService. Awaiting first real publish test.</td>
     </tr>
     <tr>
       <td><strong>TikTok</strong></td>
       <td><span class="badge badge-yellow">OAuth Ready</span></td>
-      <td><span class="badge badge-yellow">In Progress</span></td>
+      <td><span class="badge badge-yellow">Code Wired</span></td>
       <td>15 (6/min)</td>
       <td>2,200 chars</td>
-      <td>Video-only platform. FILE_UPLOAD actor built. Publish wiring pending.</td>
+      <td>Video-only. Chunked upload + creator info check wired. Awaiting first real publish test.</td>
     </tr>
     <tr>
       <td><strong>Pinterest</strong></td>
       <td><span class="badge badge-yellow">OAuth Ready</span></td>
-      <td><span class="badge badge-yellow">In Progress</span></td>
+      <td><span class="badge badge-yellow">Code Wired</span></td>
       <td>150</td>
       <td>500 chars</td>
-      <td>Pin creation actor built. Publish wiring pending.</td>
+      <td>Photos via R2 CDN, videos via direct upload. Board picker wired. Awaiting first real publish test.</td>
     </tr>
     <tr>
       <td><strong>X / Twitter</strong></td>
@@ -311,7 +311,7 @@ Local media file<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">PlatformRateLimiter.swift</span>&nbsp;&nbsp;<span class="comment">— Rolling-window rate enforcement, never drops posts</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">PlatformCapabilityEngine.swift</span>&nbsp;&nbsp;<span class="comment">— Payload validation, compatibility checking</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">DataStore.swift</span>&nbsp;&nbsp;<span class="comment">— JSON file persistence, posts.json + accounts.json</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">MediaHostingService.swift</span>&nbsp;&nbsp;<span class="comment">— Imgur upload for public HTTPS URLs</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">MediaHostingService.swift</span>&nbsp;&nbsp;<span class="comment">— R2 CDN upload for public HTTPS URLs (sinisterprintworks.net relay)</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">KeychainService.swift</span>&nbsp;&nbsp;<span class="comment">— Single JSON vault (net.sinisterprintworks.omnipresence)</span><br>
 &nbsp;&nbsp;<span class="dir">Core/Transcoding/</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">TranscodeEngine.swift</span>&nbsp;&nbsp;<span class="comment">— AVFoundation, H.264/HEVC, smart center-crop for macro photos</span><br>
@@ -338,6 +338,24 @@ xcodebuild -scheme SinisterOmnipresence -configuration Debug clean build</code><
 
 <h2>Build Log</h2>
 <p class="auto-badge">Auto-generated on every push to main.</p>
+
+<div class="build-entry">
+  <div class="version">v0.3 — YouTube, TikTok, Pinterest Code Wiring</div>
+  <div class="build-date">April 3, 2026 &nbsp;|&nbsp; Commit: 0afde14 &nbsp;|&nbsp; <span class="badge badge-yellow">Code Wired — Not Yet E2E Tested</span></div>
+  <span class="platform-tag">YouTube</span>
+  <span class="platform-tag">TikTok</span>
+  <span class="platform-tag">Pinterest</span>
+  <span class="platform-tag">R2 CDN</span>
+  <ul style="margin-top:12px">
+    <li><strong>YouTube:</strong> Added <code>publishToYouTube()</code> in PostSchedulerService — video-only guard, title validation, resumable upload via <code>YouTubeAPI.uploadVideo()</code>, privacy defaults to <code>private</code></li>
+    <li><strong>TikTok:</strong> Added <code>publishToTikTok()</code> — video-only guard, pre-flight <code>getCreatorInfo()</code> check, chunked upload via <code>TikTokAPI.publishVideoByUpload()</code>, 2200-char caption limit</li>
+    <li><strong>Pinterest:</strong> Added <code>publishToPinterest()</code> — board validation, photos uploaded to R2 CDN for public URL then <code>createImagePin()</code>, videos via <code>createVideoPin()</code> direct upload, R2 cleanup after ingestion</li>
+    <li>Replaced <code>MediaHostingService</code> — removed all Imgur dependencies, now routes through <code>sinisterprintworks.net/api/media/social</code> (Cloudflare R2 CDN)</li>
+    <li>Added ComposerView UI: YouTube title warning, TikTok video-only warnings, Pinterest "Fetch Boards" button + board validation warning</li>
+    <li>All three platforms routed through typed Swift actor API clients (not legacy PlatformPublisher)</li>
+    <li><strong>Status:</strong> Code compiles and builds cleanly. Real end-to-end publishing has NOT been tested yet — first real publish will happen when Ean personally tests each platform through the running app. Expect bugs on first attempt.</li>
+  </ul>
+</div>
 
 <div class="build-entry">
   <div class="version">v0.2 — Instagram + Facebook Publishing</div>
@@ -376,7 +394,7 @@ xcodebuild -scheme SinisterOmnipresence -configuration Debug clean build</code><
     <li>Payload validation engine (<code>PlatformCapabilityEngine</code>) — live compatibility checking per platform</li>
     <li>Per-platform media transcoding (<code>MediaProcessorService</code> + <code>TranscodeEngine</code>) using AVFoundation, H.264/HEVC, hardware-accelerated on Apple Silicon; smart center-crop for macro photography</li>
     <li>Cloudflare R2 media staging pipeline for Instagram/Pinterest public URL requirement</li>
-    <li>Imgur integration as fallback hosting for Instagram/Pinterest photo posts</li>
+    <li>Cloudflare R2 media hosting for Instagram/Pinterest public URL requirement</li>
     <li>macOS notifications for publish success/failure/token expiry</li>
     <li>ComposerView with HSplitView editor + live preview, per-platform caption overrides</li>
     <li>OnboardingView, SchedulerView, AccountsView, AnalyticsView (placeholder), SettingsView, CredentialsView</li>
@@ -398,12 +416,12 @@ xcodebuild -scheme SinisterOmnipresence -configuration Debug clean build</code><
   <p><code>PlatformPublisher</code> returns <code>fb_&lt;UUID&gt;</code> placeholders when API calls fail instead of throwing. This hides errors.</p>
 </div>
 <div class="card">
-  <div class="card-title"><span class="badge badge-yellow">Low</span> EngagementService / SocialDispatcher on API v21.0</div>
-  <p>Data endpoints are v24.0 but these two services still reference v21.0 Graph API URLs. Not currently blocking.</p>
+  <div class="card-title"><span class="badge badge-blue">PR Open</span> EngagementService / SocialDispatcher on API v21.0</div>
+  <p>Data endpoints are v24.0 but these two services still reference v21.0 Graph API URLs. Fix written in PR #7 — not yet merged to main.</p>
 </div>
 <div class="card">
-  <div class="card-title"><span class="badge badge-yellow">Low</span> Token expiry "not found" warning</div>
-  <p>Logs show "Token exists but no expiry found" for Facebook. Fix: disconnect and reconnect Facebook account in app to store fresh expiry timestamp.</p>
+  <div class="card-title"><span class="badge badge-blue">PR Open</span> Token expiry "not found" warning</div>
+  <p>Logs show "Token exists but no expiry found" for Facebook. Silent back-fill fix written in PR #8 — not yet merged to main.</p>
 </div>
 <div class="card">
   <div class="card-title"><span class="badge badge-blue">Planned</span> Connection verification (Roadmap Step 3)</div>
@@ -424,7 +442,7 @@ xcodebuild -scheme SinisterOmnipresence -configuration Debug clean build</code><
     <tr><td>4</td><td>Smart capability detection + compatibility engine</td><td><span class="badge badge-green">Complete</span></td></tr>
     <tr><td>5</td><td>Auto-formatting + per-platform transcoding</td><td><span class="badge badge-green">Complete</span></td></tr>
     <tr><td>6</td><td>Instagram + Facebook end-to-end publish</td><td><span class="badge badge-green">Complete</span></td></tr>
-    <tr><td>7</td><td>YouTube, TikTok, Pinterest real publishing</td><td><span class="badge badge-yellow">In Progress</span></td></tr>
+    <tr><td>7</td><td>YouTube, TikTok, Pinterest real publishing</td><td><span class="badge badge-yellow">Code Wired — Awaiting E2E Test</span></td></tr>
     <tr><td>8</td><td>Analytics + engagement tracking</td><td><span class="badge badge-blue">Planned</span></td></tr>
   </tbody>
 </table>
